@@ -1,11 +1,14 @@
-require "byebug"
 class RandomGenerator
   attr_reader :output_queue
 
-  def initialize
+  def initialize(gen_amt)
     @output_queue = []
     @last100 = []
     @running = true
+    @thread_output = gen_amt / 5
+  end
+
+  def start
     writer = start_writer
     start_generators
     kill_proccess
@@ -52,7 +55,7 @@ class RandomGenerator
   
   def contious_generation
     count = 0 
-    100.times do
+    @thread_output.times do
       count += 1   
       rand_gen
     end
@@ -64,7 +67,8 @@ class RandomGenerator
 
   def write_to_disk(output)
     path = "./output.txt"
-    output_string = output[:value].to_s + ", " + output[:thread].to_s + ", " + output[:time].to_s + "\n"
+    time = output[:time].strftime("%H:%M:%N")
+    output_string = output[:value].to_s + ", " + output[:thread].to_s + ", " + time + "\n"
     File.open(path, 'a') { |file| file.write(output_string) }
   end
 
@@ -72,7 +76,7 @@ class RandomGenerator
     @last100 << val
     @last100.shift if @last100.length > 100
     thread_id = Thread.current
-    # p thread_id.to_s + ": " + val.to_s
+    p thread_id.to_s + ": " + val.to_s
     output = { value: val, thread: thread_id, time: Time.now }
     add_to_queue(output)
   end
@@ -96,5 +100,5 @@ end
 
 
 #test 
-rg = RandomGenerator.new
+rg = RandomGenerator.new(100)
 puts rg.get_freq
