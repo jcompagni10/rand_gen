@@ -18,7 +18,7 @@ This will generate 5000 random numbers, save them to ``./output.txt``
 and return the frequency results for the last 100. 
 
 An Rspec test suite can be run with: 
-```ruby
+```bash
 ruby lib/rand_gen.rb 
 ```
 This performs 3 tests: 
