@@ -3,7 +3,6 @@ require_relative "binary_min_heap"
 class RandomGenerator
   attr_reader :output_queue
 
-  #convenience method for instantiating random gen class and running
   def initialize(gen_amt)
     @output_queue = []
     @thread_output = gen_amt / 5
@@ -11,10 +10,12 @@ class RandomGenerator
     @thread_queues = Array.new(5) { [] }
   end
 
+  #start random generator threads and writer thread
   def start
     @running = true
-    start_generators
+    gen_threads = start_generators
     writer = start_writer
+    gen_threads.each(&:join)
     kill_proccess
     writer.join
   end
@@ -78,8 +79,8 @@ class RandomGenerator
   # and and the output queue has been emmptied
   def fill_queues 
     while @thread_queues.any?(&:empty?) && (@running || !@output_queue.empty?)
-      el = @output_queue.shift
-      @thread_queues[el[:thread]] << el
+      el = @output_queue.shift 
+      @thread_queues[el[:thread]] << el if el
     end
   end
 
@@ -120,7 +121,7 @@ class RandomGenerator
       thread[:id] = idx
       threads << thread
     end
-    threads.each(&:join)
+    threads
   end
   
   #continious generation for each thread until @thread_ouput is reached
@@ -160,8 +161,9 @@ class RandomGenerator
 
 end
 
-# 
-if __FILE__ == $0
+# convenience method to run and test code 
+
+if $0 === __FILE__
   File.open('./output.txt', 'w') { |file| file.write("") }
   random_gen = RandomGenerator.new(5000)
   random_gen.start

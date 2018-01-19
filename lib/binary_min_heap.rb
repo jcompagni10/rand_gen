@@ -31,9 +31,6 @@ class BinaryMinHeap
     self.class.heapify_up(store, self.count - 1, &prc)
   end
 
-
-
-
   # returns child indexes for a given parent
   def self.child_indices(len, parent_index)
     [2 * parent_index + 1, 2 * parent_index + 2].select do |idx|

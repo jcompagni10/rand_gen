@@ -26,4 +26,4 @@ This performs 3 tests:
 * tests that values are generated with the expected frequencies (it is possible that this test might fail on occasion, but is statistically unlikely).
 * Tests that values are written to the disc in the order in which they are generated. 
 
-All tests are performed with a sample size of 50,000
+All tests are performed with a sample size[] of 50,000
