@@ -2,8 +2,8 @@ require 'rand_gen'
 require_relative 'rand_gen_spec_helper'
 require 'Time'
 describe RandomGenerator do
-  subject(:generator) {RandomGenerator.new(1000)}
-
+  subject(:generator) {RandomGenerator.new(50000)}
+  
   before(:each) do 
     File.open('./output.txt', 'w') { |file| file.write("") }
     generator.start
@@ -11,7 +11,7 @@ describe RandomGenerator do
 
   it "generates the expect number of values" do
     data = readfile
-    expect(data.length).to eq(1000)
+    expect(data.length).to eq(50000)
   end
 
   it "generates numbers with the expected frequency" do
@@ -27,8 +27,8 @@ describe RandomGenerator do
   it "places all values in order" do 
     data = readfile
     data.each_cons(2) do |touple|
-      time1 = touple[0][2].split(":").join.to_i
-      time2 = touple[1][2].split(":").join.to_i
+      time1 = touple[0][1].split(":").join.to_i
+      time2 = touple[1][1].split(":").join.to_i
       expect(time1).to be <= time2
     end
   end

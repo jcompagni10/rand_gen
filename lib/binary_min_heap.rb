@@ -15,24 +15,15 @@ class BinaryMinHeap
   end
 
   def extract
-    raise "no element to extract" if count == 0
-
     val = store[0]
-
     if count > 1
       store[0] = store.pop
       self.class.heapify_down(store, 0, &prc)
     else
-      # Last element left.
       store.pop
     end
 
     val
-  end
-
-  def peek
-    raise "no element to peek" if count == 0
-    store[0]
   end
 
   def push(val)
@@ -42,47 +33,21 @@ class BinaryMinHeap
 
 
 
-  public
-  def self.child_indices(len, parent_index)
-    # If `parent_index` is the parent of `child_index`:
-    #
-    # (1) There are `parent_index` previous nodes to
-    # `parent_index`. Any children of `parent_index` needs to appear
-    # after the children of all the nodes preceeding the parent.
-    #
-    # (2) Also, since the tree is full, every preceeding node will
-    # have two children before the parent has any children. This means
-    # there are `2 * parent_index` child nodes before the first child
-    # of `parent_index`.
-    #
-    # (3) Lastly there is also the root node, which is not a child of
-    # anyone. Therefore, there are a total of `2 * parent_index + 1`
-    # nodes before the first child of `parent_index`.
-    #
-    # (4) Therefore, the children of parent live at `2 * parent_index
-    # + 1` and `2 * parent_index + 2`.
 
+  # returns child indexes for a given parent
+  def self.child_indices(len, parent_index)
     [2 * parent_index + 1, 2 * parent_index + 2].select do |idx|
-      # Only keep those in range.
       idx < len
     end
   end
 
+  # returns parent index of child
   def self.parent_index(child_index)
-    # If child_index is odd: `child_index == 2 * parent_index + 1`
-    # means `parent_index = (child_index - 1) / 2`.
-    #
-    # If child_index is even: `child_index == 2 * parent_index + 2`
-    # means `parent_index = (child_index - 2) / 2`. Note that, because
-    # of rounding, when child_index is even: `(child_index - 2) / 2 ==
-    # (child_index - 1) / 2`.
-
-    raise "root has no parent" if child_index == 0
     (child_index - 1) / 2
   end
 
+  # maintain valid heap after extraction
   def self.heapify_down(array, parent_idx, len = array.length, &prc)
-    prc ||= Proc.new { |el1, el2| el1 <=> el2 }
 
     l_child_idx, r_child_idx = child_indices(len, parent_idx)
 
@@ -111,11 +76,10 @@ class BinaryMinHeap
     heapify_down(array, swap_idx, len, &prc)
   end
 
+  # maintain valid heap after adding to end of array
   def self.heapify_up(array, child_idx, len = array.length, &prc)
-    prc ||= Proc.new { |el1, el2| el1 <=> el2 }
 
-    # As a convenience, return array
-    return array if child_idx == 0
+    return if child_idx == 0
 
     parent_idx = parent_index(child_idx)
     child_val, parent_val = array[child_idx], array[parent_idx]
