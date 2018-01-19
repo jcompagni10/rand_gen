@@ -1,14 +1,20 @@
+require_relative "binary_min_heap"
+# require "byebug"
+
 class RandomGenerator
   attr_reader :output_queue
 
   def initialize(gen_amt)
+    File.open('./output.txt', 'w') { |file| file.write("") }
     @output_queue = []
     @last100 = []
-    @running = true
     @thread_output = gen_amt / 5
+    @running = false
+    @thread_queues = Array.new(5) { [] }
   end
 
   def start
+    @running = true
     writer = start_writer
     start_generators
     kill_proccess
@@ -33,24 +39,60 @@ class RandomGenerator
 
   def start_writer
     Thread.new do 
-      while @running || !output_queue.empty?
+      while @running || !@heap.empty?
         ensure_order_and_write
+        # write_to_disk(@output_queue.shift) unless output_queue.empty?
       end
     end
   end
 
   def start_generators
     threads = []
-    5.times do 
-      threads << Thread.new { contious_generation }
+    5.times do |idx|
+      thread = Thread.new { contious_generation }
+      thread[:id] = idx
+      threads << thread
     end
     threads.each(&:join)
   end
 
+  # def ensure_order_and_write
+  #   return if @running && @output_queue.length < 40
+  #   batch = @output_queue.shift(40)
+  #   batch.sort_by! { |output| output[:time] }
+  #   batch[0..20].each { |output| write_to_disk(output) }
+  #   @output_queue.unshift(*batch[21..40])
+  # end
+
+  def fill_queues 
+    while @thread_queues.any?(&:empty?) && (@running || !@output_queue.empty?)
+      el = @output_queue.shift
+      if el && el[:thread]
+        @thread_queues[el[:thread]] << el
+      end
+    end
+  end
+
   def ensure_order_and_write
-    batch = @output_queue.shift(5)
-    batch.sort_by!{|output| output[:time]}
-    batch.each { |output| write_to_disk(output) }
+    fill_queues
+    setup_heap if @heap.nil?
+    unless @heap.empty?
+      extracted_el = @heap.extract
+      write_to_disk(extracted_el)
+      from_queue = extracted_el[:thread]
+      fill_queues
+      next_el = @thread_queues[from_queue].shift
+      if next_el
+        @heap.push(next_el) 
+      end
+    end
+  end
+
+  def setup_heap
+    @heap = BinaryMinHeap.new
+    @thread_queues.each do |queue|
+      @heap.push(queue.shift)
+    end
   end
   
   def contious_generation
@@ -67,7 +109,7 @@ class RandomGenerator
 
   def write_to_disk(output)
     path = "./output.txt"
-    time = output[:time].strftime("%H:%M:%N")
+    time = output[:time].strftime("%H:%M:%S:%N")
     output_string = output[:value].to_s + ", " + output[:thread].to_s + ", " + time + "\n"
     File.open(path, 'a') { |file| file.write(output_string) }
   end
@@ -75,7 +117,7 @@ class RandomGenerator
   def handle_output(val)
     @last100 << val
     @last100.shift if @last100.length > 100
-    thread_id = Thread.current
+    thread_id = Thread.current[:id]
     p thread_id.to_s + ": " + val.to_s
     output = { value: val, thread: thread_id, time: Time.now }
     add_to_queue(output)
@@ -99,6 +141,10 @@ class RandomGenerator
 end
 
 
-#test 
-rg = RandomGenerator.new(100)
+
+
+# test 
+
+rg = RandomGenerator.new(1000)
+rg.start
 puts rg.get_freq
